@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: ${REGISTRY}/melbet-frontend:${TAG}
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "80:80"
+
+  backend:
+    image: ${REGISTRY}/melbet-backend:${TAG}
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/melbet
+      - REDIS_URL=redis://redis:6379
+
+  admin:
+    image: ${REGISTRY}/melbet-admin:${TAG}
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.role == manager]
+
+  mongo:
+    image: mongo:latest
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:latest
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mongodb_data:
+  redis_data: 
